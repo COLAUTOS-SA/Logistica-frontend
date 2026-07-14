@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía Completa — Sistema de Gestión Logística COLAUTOS</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f8;
+      color: #1e293b;
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%);
+      color: white;
+      padding: 56px 40px 48px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      padding: 4px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    .hero p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.7);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── SECTION ── */
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .section-title .icon {
+      font-size: 24px;
+    }
+
+    h2 { font-size: 17px; font-weight: 700; color: #1e293b; margin: 28px 0 12px; }
+    h3 { font-size: 15px; font-weight: 600; color: #334155; margin: 20px 0 10px; }
+    p  { color: #475569; margin-bottom: 14px; }
+    ul, ol { padding-left: 20px; color: #475569; margin-bottom: 14px; }
+    li { margin-bottom: 6px; }
+    strong { color: #1e293b; }
+
+    /* ── TABLES ── */
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead tr { background: #f1f5f9; }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 700;
+      color: #475569;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    td {
+      padding: 11px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbff; }
+
+    /* ── ALERTS ── */
+    .alert {
+      display: flex;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    .alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .alert.info    { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+    .alert.warning { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+    .alert.danger  { background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; }
+    .alert.success { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+
+    /* ── ROLES ── */
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .role-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: box-shadow 0.2s;
+    }
+    .role-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .role-card.admin    { border-color: #6366f1; background: #f5f3ff; }
+    .role-card.asistente{ border-color: #22c55e; background: #f0fdf4; }
+    .role-card.colision { border-color: #a855f7; background: #faf5ff; }
+    .role-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 12px;
+    }
+    .role-card.admin     .role-avatar { background: #6366f1; }
+    .role-card.asistente .role-avatar { background: #22c55e; }
+    .role-card.colision  .role-avatar { background: #a855f7; }
+    .role-card h3 { margin-top: 0; font-size: 15px; color: #0f172a; }
+    .role-card p  { font-size: 13px; margin-bottom: 10px; }
+    .perm-tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin: 2px;
+      font-weight: 600;
+    }
+    .can  { background: #dcfce7; color: #166534; }
+    .cant { background: #fee2e2; color: #991b1b; }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+    .step  {
+      display: flex;
+      gap: 20px;
+      position: relative;
+    }
+    .step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 44px;
+      width: 2px;
+      height: calc(100% + 0px);
+      background: #e2e8f0;
+      z-index: 0;
+    }
+    .step-num {
+      width: 40px; height: 40px; min-width: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1d4ed8, #6366f1);
+      color: white;
+      font-weight: 800;
+      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1;
+      margin-top: 4px;
+      box-shadow: 0 2px 8px rgba(29,78,216,0.3);
+    }
+    .step-body { flex: 1; padding-bottom: 28px; }
+    .step-who {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+    .quien-admin     { background: #e0e7ff; color: #4338ca; }
+    .quien-asistente { background: #dcfce7; color: #166534; }
+    .quien-colision  { background: #f3e8ff; color: #7e22ce; }
+    .step-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    .step-desc  { font-size: 14px; color: #475569; margin-bottom: 10px; }
+    .estado-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .e-abierta      { background: #fee2e2; color: #b91c1c; }
+    .e-gestion      { background: #fef3c7; color: #92400e; }
+    .e-radicada     { background: #dbeafe; color: #1d4ed8; }
+    .e-aprobada     { background: #dcfce7; color: #166534; }
+    .e-facturacion  { background: #f3e8ff; color: #7e22ce; }
+    .e-cerrada      { background: #f1f5f9; color: #475569; }
+
+    /* ── DOCUMENTS ── */
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .doc-card {
+      border-radius: 12px;
+      padding: 18px;
+      border: 1.5px solid #e2e8f0;
+    }
+    .doc-card .doc-icon { font-size: 28px; margin-bottom: 8px; }
+    .doc-card h3 { font-size: 13px; font-weight: 700; margin: 0 0 6px; color: #0f172a; }
+    .doc-card p  { font-size: 12px; margin: 0; color: #64748b; }
+
+    /* ── DIAGRAM ── */
+    .mermaid-wrap {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    /* ── GLOSSARY ── */
+    .glossary dt {
+      font-weight: 700;
+      color: #1d4ed8;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+    .glossary dd {
+      color: #475569;
+      font-size: 14px;
+      margin-left: 16px;
+      margin-bottom: 4px;
+    }
+
+    /* ── SUMMARY BOX ── */
+    .summary-box {
+      background: linear-gradient(135deg, #0f172a, #1e3a5f);
+      color: white;
+      border-radius: 16px;
+      padding: 32px 36px;
+      margin-top: 8px;
+    }
+    .summary-box h2 { color: white; margin-top: 0; font-size: 20px; margin-bottom: 20px; }
+    .summary-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .flow-item {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .flow-arrow { color: rgba(255,255,255,0.4); font-size: 18px; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; }
+      .section { box-shadow: none; border: 1px solid #e2e8f0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🚗 COLAUTOS · Área Logística</div>
+  <h1>Sistema de Gestión Logística</h1>
+  <p>Guía completa de uso, flujos y procesos — Todo lo que necesitas saber sobre el sistema</p>
+</div>
+
+<div class="container">
+
+  <!-- ① QUÉ ES -->
+  <div class="section">
+    <div class="section-title"><span class="icon">💡</span> ¿Qué es este sistema?</div>
+    <p>Es una aplicación web interna para el área de <strong>logística de COLAUTOS</strong> que resuelve un problema concreto:</p>
+    <div class="alert info">
+      <span class="alert-icon">📌</span>
+      <div>Cuando llega un vehículo <strong>dañado</strong> desde la planta de Mazda a la bodega de COLAUTOS, hay que <strong>reclamarle a la transportadora (BERGE Vigía)</strong> para que asuma el costo del daño. Antes, esto se manejaba en Excel, correos y carpetas sueltas. Este sistema centraliza todo en un solo lugar.</div>
+    </div>
+    <p>El sistema maneja cuatro grandes módulos:</p>
+    <ul>
+      <li>📋 <strong>Reclamaciones:</strong> Seguimiento del proceso de reclamación desde el reporte hasta el cierre</li>
+      <li>📄 <strong>Documentos:</strong> Almacenamiento digital de manifiestos, remesas e inventarios escaneados</li>
+      <li>🔔 <strong>Alertas:</strong> Control del plazo de 10 días hábiles para no perder el derecho a reclamar</li>
+      <li>👥 <strong>Usuarios:</strong> Gestión de accesos y permisos por rol</li>
+    </ul>
+  </div>
+
+  <!-- ② ROLES -->
+  <div class="section">
+    <div class="section-title"><span class="icon">👤</span> ¿Quién usa el sistema? — Los 3 roles</div>
+    <p>Hay tres tipos de usuario. Cada uno tiene funciones específicas y ve exactamente lo que necesita.</p>
+
+    <div class="roles-grid">
+      <!-- ADMIN -->
+      <div class="role-card admin">
+        <div class="role-avatar">👑</div>
+        <h3>Administrador (Logística)</h3>
+        <p><strong>Carolina Aricapa</strong></p>
+        <p>Dueña del proceso. Gestiona todo, radica en Vigía y toma decisiones.</p>
+        <div>
+          <span class="perm-tag can">✅ Ver todo</span>
+          <span class="perm-tag can">✅ Crear reclamaciones</span>
+          <span class="perm-tag can">✅ Cambiar estados</span>
+          <span class="perm-tag can">✅ Radicar en Vigía</span>
+          <span class="perm-tag can">✅ Exportar</span>
+          <span class="perm-tag can">✅ Gestionar usuarios</span>
+        </div>
+      </div>
+
+      <!-- ASISTENTE -->
+      <div class="role-card asistente">
+        <div class="role-avatar">📋</div>
+        <h3>Asistente Comercial</h3>
+        <p><strong>Lorena G. · Pilar P. · Kendry I.</strong></p>
+        <p>Reciben los vehículos en bodega y reportan las novedades.</p>
+        <div>
+          <span class="perm-tag can">✅ Crear reclamaciones</span>
+          <span class="perm-tag can">✅ Adjuntar fotos/soportes</span>
+          <span class="perm-tag can">✅ Consultar estados</span>
+          <span class="perm-tag can">✅ Cargar documentos</span>
+          <span class="perm-tag cant">❌ Cambiar estados</span>
+          <span class="perm-tag cant">❌ Gestionar usuarios</span>
+        </div>
+      </div>
+
+      <!-- COLISIÓN -->
+      <div class="role-card colision">
+        <div class="role-avatar">🔧</div>
+        <h3>Área de Colisión</h3>
+        <p><strong>Miguel Colisión</strong></p>
+        <p>Evalúa el daño, genera la cotización y sube la factura.</p>
+        <div>
+          <span class="perm-tag can">✅ Ver reclamaciones asignadas</span>
+          <span class="perm-tag can">✅ Subir cotización</span>
+          <span class="perm-tag can">✅ Subir factura</span>
+          <span class="perm-tag cant">❌ Crear reclamaciones</span>
+          <span class="perm-tag cant">❌ Cambiar estados</span>
+          <span class="perm-tag cant">❌ Gestionar usuarios</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ FLUJO COMPLETO -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🔄</span> Flujo completo de una reclamación</div>
+    <p>Imaginemos que Lorena recibe un camión y detecta un rayón en la puerta de un Mazda CX-5. Esto es lo que ocurre, paso a paso:</p>
+
+    <div class="steps">
+
+      <!-- PASO 1 -->
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-who quien-asistente">📋 Asistente Comercial</div>
+          <div class="step-title">Detección y reporte de la novedad</div>
+          <div class="step-desc">Al descargar el vehículo, Lorena detecta el daño. Abre el sistema y hace clic en <strong>"Nueva Reclamación"</strong>. Llena el formulario con:</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Campo</th><th>Ejemplo</th><th>¿Obligatorio?</th></tr></thead>
+              <tbody>
+                <tr><td>VIN</td><td style="font-family:monospace">3MVDM2W7AVL319047</td><td>✅ Sí</td></tr>
+                <tr><td>Vehículo</td><td>Mazda CX-5 2026</td><td>✅ Sí</td></tr>
+                <tr><td>Tipo de novedad</td><td>Rayón</td><td>✅ Sí</td></tr>
+                <tr><td>Transportadora</td><td>BERGE Vigía</td><td>✅ Sí</td></tr>
+                <tr><td>No. Remesa</td><td>VIG-2100765</td><td>✅ Sí</td></tr>
+                <tr><td>No. Manifiesto</td><td>410900097167</td><td>Opcional</td></tr>
+                <tr><td>Descripción</td><td>"Rayón profundo en puerta delantera..."</td><td>✅ Sí</td></tr>
+                <tr><td><strong>Fotos del daño</strong></td><td>foto_rayon_1.jpg</td><td>✅ <strong>Obligatorio</strong></td></tr>
+                <tr><td>Videos</td><td>video_novedad.mp4</td><td>Opcional</td></tr>
+                <tr><td><strong>Soportes</strong></td><td>remesa + inventario escaneados</td><td>✅ <strong>Obligatorio</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert warning">
+            <span class="alert-icon">⚠️</span>
+            <div>Sin fotos y sin soportes (remesa + inventario), <strong>el sistema NO permite enviar</strong>. Esto garantiza que siempre haya evidencia desde el primer momento.</div>
+          </div>
+          <div>Estado resultante: <span class="estado-badge e-abierta">🔴 Abierta</span></div>
+          <p style="margin-top:8px; font-size:13px; color:#ef4444;"><strong>⏱️ El contador de 10 días hábiles empieza a correr ahora mismo.</strong></p>
+        </div>
+      </div>
+
+      <!-- PASO 2 -->
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-who quien-admin">👑 Admin / Logística</div>
+          <div class="step-title">Revisión y envío a Colisión</div>
+          <div class="step-desc">Carolina entra al sistema. En el <strong>Dashboard</strong> ve las reclamaciones abiertas y una alerta si alguna está próxima a vencer. Entra al detalle, revisa fotos y soportes, y si todo está correcto hace clic en <strong>"Cambiar Estado"</strong> para mover la reclamación a Colisión.</div>
+          <div>Estado resultante: <span class="estado-badge e-gestion">🟡 En gestión</span></div>
+        </div>
+      </div>
+
+      <!-- PASO 3 -->
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-who quien-colision">🔧 Área de Colisión</div>
+          <div class="step-title">Evaluación del daño y cotización</div>
+          <div class="step-desc">Miguel entra al sistema. En la lista de reclamaciones ve las que le corresponden. Entra al detalle y encuentra una <strong>sección especial de color púrpura</strong> exclusiva para Colisión: <em>"Subir Cotización"</em>. Aquí ingresa:</div>
+          <ul>
+            <li><strong>Valor de la cotización</strong> — ej: $850.000</li>
+            <li><strong>Descripción del trabajo</strong> — ej: "Reparación pintura puerta delantera"</li>
+            <li><strong>Archivo PDF</strong> de la cotización</li>
+          </ul>
+          <div class="alert info">
+            <span class="alert-icon">ℹ️</span>
+            <div>Esta sección <strong>solo la ve Miguel</strong> (Colisión). Si Lorena o Carolina abren la misma reclamación, no verán el formulario de cotización.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 4 -->
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-who quien-admin">👑 Admin / Logística</div>
+          <div class="step-title">Radicación en Vigía</div>
+          <div class="step-desc">Con la cotización lista, Carolina va a la <strong>plataforma externa de Vigía</strong> (fuera del sistema) y radica la reclamación con toda la documentación. Vigía le asigna un número de radicado (ej: <code>RAD-VIG-2026-4521</code>). Carolina regresa al sistema y actualiza el estado ingresando ese número.</div>
+          <div class="alert danger">
+            <span class="alert-icon">🚨</span>
+            <div>Este paso debe hacerse <strong>antes de los 10 días hábiles</strong>. Si se pasa, COLAUTOS pierde el derecho a reclamar y debe asumir el costo del daño. El sistema muestra alertas de colores:<br>
+            🟢 1–5 días: OK &nbsp;&nbsp; 🟡 6–8 días: Ojo &nbsp;&nbsp; 🔴 9–10 días: ¡URGENTE!</div>
+          </div>
+          <div>Estado resultante: <span class="estado-badge e-radicada">🔵 Radicada en Vigía</span></div>
+          <p style="font-size:13px;color:#64748b;margin-top:8px;">El contador de días ya no se muestra — el plazo fue cumplido.</p>
+        </div>
+      </div>
+
+      <!-- PASO 5 -->
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-who quien-admin">👑 Admin / Logística</div>
+          <div class="step-title">Respuesta de Vigía</div>
+          <div class="step-desc">Vigía evalúa la reclamación radicada (puede tardar días o semanas). Si aprueba, Carolina actualiza el estado en el sistema.</div>
+          <div>Estado resultante: <span class="estado-badge e-aprobada">🟢 Aprobada</span></div>
+        </div>
+      </div>
+
+      <!-- PASO 6 -->
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-who quien-colision">🔧 Área de Colisión</div>
+          <div class="step-title">Reparación y carga de factura</div>
+          <div class="step-desc">Con la aprobación de Vigía, se procede a reparar el vehículo. Una vez terminado, la misma sección púrpura ahora dice <em>"Subir Factura"</em>. Miguel sube:</div>
+          <ul>
+            <li>Factura de reparación</li>
+            <li>Certificado de novedad</li>
+            <li>Evidencia de destrucción de partes (si aplica)</li>
+          </ul>
+          <div>Estado resultante: <span class="estado-badge e-facturacion">🟣 En facturación</span></div>
+        </div>
+      </div>
+
+      <!-- PASO 7 -->
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <div class="step-who quien-admin">👑 Admin / Logística</div>
+          <div class="step-title">Cierre de la reclamación</div>
+          <div class="step-desc">Carolina envía la orden de facturación a Vigía. Cuando Vigía paga, Carolina cierra la reclamación. El historial queda guardado con todos los movimientos, fechas, personas y valores.</div>
+          <div>Estado resultante: <span class="estado-badge e-cerrada">⚫ Cerrada</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ④ DIAGRAMA -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🗺️</span> Diagrama del flujo completo</div>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+    A["🚛 Vehículo llega a bodega"] --> B{"¿Tiene daño\no novedad?"}
+    B -->|No| C["✅ Se recibe sin novedad"]
+    B -->|Sí| D["📸 Asistente documenta\nfotos + remesa + inventario"]
+    D --> E["📝 Crea reclamación en sistema"]
+    E --> F["🔴 ABIERTA\n⏱️ Inician 10 días hábiles"]
+    F --> G["👩‍💼 Carolina revisa\ny envía a Colisión"]
+    G --> H["🟡 EN GESTIÓN"]
+    H --> I["🔧 Miguel evalúa\ny sube cotización"]
+    I --> J["💰 Cotización lista"]
+    J --> K["👩‍💼 Carolina radica\nen plataforma Vigía"]
+    K --> L["🔵 RADICADA EN VIGÍA\n✅ Plazo cumplido"]
+    L --> M{"¿Vigía aprueba?"}
+    M -->|No| N["❌ Se revisa\ny re-radica"]
+    N --> K
+    M -->|Sí| O["🟢 APROBADA"]
+    O --> P["🔧 Se repara el vehículo\nMiguel sube factura"]
+    P --> Q["🟣 EN FACTURACIÓN"]
+    Q --> R["💵 Vigía paga"]
+    R --> S["⚫ CERRADA ✅"]
+
+    style A fill:#1e40af,color:#fff,stroke:#1e40af
+    style F fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style H fill:#fef3c7,color:#92400e,stroke:#fcd34d
+    style L fill:#dbeafe,color:#1d4ed8,stroke:#93c5fd
+    style O fill:#dcfce7,color:#166534,stroke:#86efac
+    style Q fill:#f3e8ff,color:#7e22ce,stroke:#c4b5fd
+    style S fill:#f1f5f9,color:#475569,stroke:#e2e8f0
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ DOCUMENTOS -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📂</span> Los documentos del sistema</div>
+    <p>Además de las reclamaciones, el sistema almacena digitalmente <strong>4 tipos de documentos</strong> que normalmente son físicos (papel). Se escanean y se suben al sistema para tenerlos siempre disponibles.</p>
+
+    <div class="docs-grid">
+      <div class="doc-card" style="background:#eff6ff;border-color:#3b82f6">
+        <div class="doc-icon">📄</div>
+        <h3>Manifiesto de carga</h3>
+        <p>Acompaña la niñera (camión). Lista todos los vehículos que transporta en ese viaje.</p>
+        <p style="margin-top:8px"><strong>Se busca por:</strong> VIN del vehículo</p>
+      </div>
+      <div class="doc-card" style="background:#f0fdf4;border-color:#22c55e">
+        <div class="doc-icon">📦</div>
+        <h3>Remesa</h3>
+        <p>Documento individual por cada vehículo. Confirma el envío de Mazda a COLAUTOS. Tiene el peso, remitente y destinatario.</p>
+        <p style="margin-top:8px"><strong>Se busca por:</strong> No. Remesa (ej: VIG-2100766)</p>
+      </div>
+      <div class="doc-card" style="background:#fffbeb;border-color:#f59e0b">
+        <div class="doc-icon">📋</div>
+        <h3>Inventario de llegada</h3>
+        <p>Checklist que se hace al recibir el vehículo en bodega. Si hay algún daño, aquí queda registrado como primera evidencia.</p>
+        <p style="margin-top:8px"><strong>Se busca por:</strong> No. Remesa</p>
+      </div>
+      <div class="doc-card" style="background:#fdf4ff;border-color:#a855f7">
+        <div class="doc-icon">🔄</div>
+        <h3>Inventario de traslado</h3>
+        <p>Cuando un vehículo se mueve entre sedes (ej: Pereira → Dosquebradas), se hace un nuevo inventario.</p>
+        <p style="margin-top:8px"><strong>Se busca por:</strong> VIN del vehículo</p>
+      </div>
+    </div>
+
+    <h2>¿Cómo se cargan los documentos?</h2>
+    <p>En el menú lateral, opción <strong>"Cargar Documentos"</strong>. El proceso es en 3 pasos:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Paso</th><th>Acción</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Seleccionar tipo</td><td>Manifiesto, Remesa, Inventario o Traslado</td></tr>
+          <tr><td><strong>2</strong></td><td>Ingresar identificador</td><td>VIN (para Manifiesto/Traslado) o No. Remesa (para Remesa/Inventario)</td></tr>
+          <tr><td><strong>3</strong></td><td>Subir el archivo</td><td>PDF, JPG o PNG del documento escaneado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>¿Cómo se consultan los documentos?</h2>
+    <p>En la sección <strong>"Documentos"</strong> del menú lateral. Hay pestañas para filtrar por tipo y un buscador que funciona por VIN, número de remesa, manifiesto o nombre del vehículo.</p>
+  </div>
+
+  <!-- ⑥ LAS PANTALLAS -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🖥️</span> Las pantallas del sistema</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Pantalla</th><th>¿Para qué sirve?</th><th>¿Quién la ve?</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>🔐 <strong>Login</strong></td>
+            <td>Selección de perfil para ingresar al sistema</td>
+            <td>Todos</td>
+          </tr>
+          <tr>
+            <td>📊 <strong>Dashboard</strong></td>
+            <td>Resumen: conteos por estado, alertas de vencimiento, reclamaciones recientes</td>
+            <td>Todos</td>
+          </tr>
+          <tr>
+            <td>⚠️ <strong>Lista de Reclamaciones</strong></td>
+            <td>Tabla completa con filtros, búsqueda y contador de días hábiles</td>
+            <td>Todos</td>
+          </tr>
+          <tr>
+            <td>📋 <strong>Detalle de Reclamación</strong></td>
+            <td>Pipeline visual de estados, historial, fotos, soportes y sección de cotización</td>
+            <td>Todos (sección cotización solo Colisión)</td>
+          </tr>
+          <tr>
+            <td>➕ <strong>Nueva Reclamación</strong></td>
+            <td>Formulario para reportar una novedad con validaciones obligatorias</td>
+            <td>Admin + Asistentes</td>
+          </tr>
+          <tr>
+            <td>📁 <strong>Documentos</strong></td>
+            <td>Catálogo de documentos escaneados con filtros por tipo y buscador</td>
+            <td>Todos</td>
+          </tr>
+          <tr>
+            <td>⬆️ <strong>Cargar Documentos</strong></td>
+            <td>Wizard de 3 pasos para subir un documento escaneado</td>
+            <td>Admin + Asistentes</td>
+          </tr>
+          <tr>
+            <td>👥 <strong>Usuarios</strong></td>
+            <td>Crear, editar y eliminar usuarios y asignar permisos</td>
+            <td>Solo Admin</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ⑦ REGLAS -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📏</span> Reglas de negocio importantes</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Regla</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>⏱️ <strong>Plazo de 10 días hábiles</strong></td>
+            <td>Desde que se detecta la novedad hasta radicar en Vigía. Si se pasa, COLAUTOS pierde el derecho a reclamar y asume el costo</td>
+          </tr>
+          <tr>
+            <td>📸 <strong>Fotos obligatorias</strong></td>
+            <td>No se puede crear una reclamación sin adjuntar al menos una foto del daño</td>
+          </tr>
+          <tr>
+            <td>📄 <strong>Soportes obligatorios</strong></td>
+            <td>Debe adjuntarse la remesa e inventario escaneados para poder enviar la reclamación</td>
+          </tr>
+          <tr>
+            <td>🔒 <strong>Permisos estrictos</strong></td>
+            <td>Colisión no puede crear reclamaciones. Asistentes no pueden cambiar estados. Cada rol ve solo lo que le corresponde</td>
+          </tr>
+          <tr>
+            <td>🔢 <strong>VIN de 17 caracteres</strong></td>
+            <td>El VIN identifica un vehículo de forma única en todo el mundo. Siempre tiene 17 caracteres alfanuméricos</td>
+          </tr>
+          <tr>
+            <td>📦 <strong>Formato de remesa</strong></td>
+            <td>Las remesas de Vigía siempre tienen formato VIG-XXXXXXX (ej: VIG-2100766)</td>
+          </tr>
+          <tr>
+            <td>📅 <strong>Días hábiles</strong></td>
+            <td>El contador excluye sábados, domingos y festivos colombianos</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ⑧ GLOSARIO -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📖</span> Glosario de términos</div>
+    <dl class="glossary">
+      <dt>VIN</dt>
+      <dd>Vehicle Identification Number. Código único de 17 caracteres que identifica un vehículo específico en todo el mundo. Ejemplo: <code>3MVDM2W7AVL319047</code></dd>
+
+      <dt>Remesa</dt>
+      <dd>Documento de transporte individual por vehículo, emitido por BERGE Vigía. Contiene datos del envío: remitente (Mazda), destinatario (COLAUTOS), peso, VIN. Ejemplo: VIG-2100766</dd>
+
+      <dt>Manifiesto</dt>
+      <dd>Documento maestro del viaje del camión-niñera. Lista todos los vehículos que lleva en ese despacho. Un manifiesto puede tener múltiples remesas.</dd>
+
+      <dt>Niñera</dt>
+      <dd>Camión especializado de varios pisos diseñado para transportar vehículos nuevos sin dañarlos.</dd>
+
+      <dt>BERGE Vigía</dt>
+      <dd>Empresa transportadora contratada por Mazda de Colombia para entregar vehículos a los concesionarios. Es quien debe responder por daños en transporte.</dd>
+
+      <dt>Radicar</dt>
+      <dd>Registrar oficialmente la reclamación en la plataforma web de Vigía. Es el paso formal que da inicio al proceso de cobro ante la transportadora.</dd>
+
+      <dt>Novedad</dt>
+      <dd>Cualquier daño o faltante detectado en un vehículo al momento de recibirlo en bodega. Puede ser: rayón, desconche, abolladura, vidrio roto, faltante de accesorios, etc.</dd>
+
+      <dt>Cotización</dt>
+      <dd>Documento generado por el área de Colisión que estima el costo económico de reparar el daño encontrado.</dd>
+
+      <dt>Inventario de llegada</dt>
+      <dd>Formulario físico que se diligencia al recibir cada vehículo en bodega. Se revisa pieza por pieza y se anota cualquier daño visible.</dd>
+
+      <dt>Carport-Yotoco</dt>
+      <dd>Centro de distribución de Mazda de Colombia en el Valle del Cauca. Es el punto de origen desde donde salen los vehículos hacia los concesionarios.</dd>
+
+      <dt>Días hábiles</dt>
+      <dd>Conteo de días que excluye sábados, domingos y festivos. El plazo de 10 días hábiles para radicar es el tiempo real de trabajo, no días de calendario.</dd>
+    </dl>
+  </div>
+
+  <!-- ⑨ RESUMEN EJECUTIVO -->
+  <div class="summary-box">
+    <h2>📌 Resumen en una sola vista</h2>
+    <div class="summary-flow">
+      <div class="flow-item">🚛 Vehículo llega a bodega</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">📸 Asistente detecta y documenta</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">📝 Crea reclamación con fotos + soportes</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">👩‍💼 Carolina gestiona y envía a Colisión</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">🔧 Miguel evalúa y sube cotización</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">⏱️ Carolina radica en Vigía (máx 10 días hábiles)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">✅ Vigía aprueba</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">🔧 Se repara + factura</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">💵 Vigía paga → ⚫ Cerrada</div>
+    </div>
+    <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-top:20px;margin-bottom:0">Todo registrado con fotos, documentos, historial y trazabilidad completa.</p>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { primaryColor: '#dbeafe', primaryTextColor: '#1e293b', primaryBorderColor: '#93c5fd', lineColor: '#94a3b8', secondaryColor: '#f1f5f9', tertiaryColor: '#fff' } });
+</script>
+
+</body>
+</html>
