@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardStats } from '../services/api';
 import {
-  LayoutDashboard, AlertTriangle, FileText, Upload,
+  LayoutDashboard, AlertTriangle, FileText,
   Users, LogOut
 } from 'lucide-react';
 
@@ -62,12 +62,6 @@ export default function Layout() {
             <FileText size={18} />
             Documentos
           </NavLink>
-          {(tienePermiso('crear') || usuario?.rol === 'admin') && (
-            <NavLink to="/cargar" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-              <Upload size={18} />
-              Colisión / Documentos
-            </NavLink>
-          )}
 
           {tienePermiso('gestionar_usuarios') && (
             <>

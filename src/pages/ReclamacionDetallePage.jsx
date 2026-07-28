@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getReclamacion, cambiarEstado, subirCotizacion, subirFactura } from '../services/api';
-import { ESTADOS_RECLAMACION } from '../data/mockData';
+import { getReclamacion, cambiarEstado, subirCotizacion, subirFactura, editarReclamacion } from '../services/api';
+import { ESTADOS_RECLAMACION, TIPOS_NOVEDAD, TRANSPORTADORAS } from '../data/mockData';
 import {
   ArrowLeft, Clock, FileText, Image, Video,
   User, CheckCircle, AlertTriangle, Download, Upload,
-  DollarSign, Receipt, ChevronRight, X
+  DollarSign, Receipt, ChevronRight, X, Pencil, Loader2
 } from 'lucide-react';
 
 export default function ReclamacionDetallePage() {
@@ -21,6 +21,58 @@ export default function ReclamacionDetallePage() {
   // Modal cambio estado
   const [showCambioEstado, setShowCambioEstado] = useState(false);
   const [guardandoEstado, setGuardandoEstado] = useState(false);
+
+  // Modal editar reclamación
+  const [showEditar, setShowEditar]         = useState(false);
+  const [formEditar, setFormEditar]         = useState({});
+  const [confirmEditar, setConfirmEditar]   = useState(false);
+  const [guardandoEditar, setGuardandoEditar] = useState(false);
+  const [toastEditar, setToastEditar]       = useState({ visible: false, msg: '', tipo: 'ok' });
+  const toastTimerRef = useState(null);
+
+  const abrirEditar = () => {
+    setFormEditar({
+      vin:           rec.vin           || '',
+      vehiculo:      rec.vehiculo      || '',
+      tipoNovedad:   rec.tipoNovedad   || '',
+      transportadora: rec.transportadora || '',
+      remesaNo:      rec.remesaNo      || '',
+      manifiestoNo:  rec.manifiestoNo  || '',
+      descripcion:   rec.descripcion   || '',
+    });
+    setShowEditar(true);
+  };
+
+  const mostrarToastEditar = (msg, tipo = 'ok') => {
+    setToastEditar({ visible: true, msg, tipo });
+    clearTimeout(toastTimerRef[0]);
+    toastTimerRef[0] = setTimeout(() => setToastEditar(prev => ({ ...prev, visible: false })), 3800);
+  };
+
+  const handleGuardarEditar = async () => {
+    setGuardandoEditar(true);
+    try {
+      const fd = new FormData();
+      fd.append('vin',            formEditar.vin);
+      fd.append('vehiculo',       formEditar.vehiculo);
+      fd.append('tipo_novedad',   formEditar.tipoNovedad);
+      fd.append('transportadora', formEditar.transportadora);
+      fd.append('no_remesa',      formEditar.remesaNo);
+      fd.append('no_manifiesto',  formEditar.manifiestoNo);
+      fd.append('descripcion',    formEditar.descripcion);
+      await editarReclamacion(rec.id, fd);
+      setConfirmEditar(false);
+      setShowEditar(false);
+      mostrarToastEditar('Se guardaron los cambios de la reclamación');
+      cargar();
+    } catch (err) {
+      setConfirmEditar(false);
+      setShowEditar(false);
+      mostrarToastEditar(err.message || 'No se pudieron guardar los cambios', 'error');
+    } finally {
+      setGuardandoEditar(false);
+    }
+  };
 
   // Sección cotización/factura
   const [showCotizacionForm, setShowCotizacionForm] = useState(false);
@@ -118,6 +170,11 @@ export default function ReclamacionDetallePage() {
             <button className="btn btn-secondary" onClick={() => window.print()}>
               <Download size={16} /> Exportar / Imprimir
             </button>
+            {usuario?.rol === 'admin' && (
+              <button className="btn btn-secondary" onClick={abrirEditar}>
+                <Pencil size={16} /> Editar
+              </button>
+            )}
             {rec.estado !== 'cerrada' && usuario?.rol === 'admin' && (
               <button className="btn btn-primary" onClick={() => setShowCambioEstado(true)}>
                 <ChevronRight size={16} /> Cambiar Estado
@@ -125,6 +182,107 @@ export default function ReclamacionDetallePage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── Modal editar reclamación ── */}
+      {showEditar && !confirmEditar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 560, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--gray-200)' }}>
+              <div>
+                <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 2 }}>Editar Reclamación</h3>
+                <span style={{ fontSize: 13, color: 'var(--gray-500)' }}>{rec.id}</span>
+              </div>
+              <button onClick={() => setShowEditar(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>VIN</label>
+                  <input className="form-control" style={{ fontFamily: 'monospace' }} value={formEditar.vin} onChange={e => setFormEditar(p => ({ ...p, vin: e.target.value.toUpperCase() }))} />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>Vehículo</label>
+                  <input className="form-control" value={formEditar.vehiculo} onChange={e => setFormEditar(p => ({ ...p, vehiculo: e.target.value }))} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>Tipo de Novedad</label>
+                  <select className="form-control" value={formEditar.tipoNovedad} onChange={e => setFormEditar(p => ({ ...p, tipoNovedad: e.target.value }))}>
+                    <option value="">Seleccionar...</option>
+                    {TIPOS_NOVEDAD.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>Transportadora</label>
+                  <select className="form-control" value={formEditar.transportadora} onChange={e => setFormEditar(p => ({ ...p, transportadora: e.target.value }))}>
+                    <option value="">Seleccionar...</option>
+                    {TRANSPORTADORAS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>No. Remesa</label>
+                  <input className="form-control" value={formEditar.remesaNo} onChange={e => setFormEditar(p => ({ ...p, remesaNo: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>No. Manifiesto</label>
+                  <input className="form-control" value={formEditar.manifiestoNo} onChange={e => setFormEditar(p => ({ ...p, manifiestoNo: e.target.value }))} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>Descripción de la Novedad</label>
+                <textarea className="form-control" rows={3} value={formEditar.descripcion} onChange={e => setFormEditar(p => ({ ...p, descripcion: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--gray-200)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setShowEditar(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={() => setConfirmEditar(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Pencil size={15} /> Guardar cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirmación editar ── */}
+      {confirmEditar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1010 }}>
+          <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', padding: '32px 28px', textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Pencil size={24} />
+            </div>
+            <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>¿Guardar cambios?</h3>
+            <p style={{ fontSize: 14, color: 'var(--gray-500)', marginBottom: 24 }}>
+              Los datos de la reclamación <strong>{rec.id}</strong> serán actualizados. ¿Estás seguro?
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => setConfirmEditar(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleGuardarEditar} disabled={guardandoEditar} style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: guardandoEditar ? 0.7 : 1 }}>
+                {guardandoEditar ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <CheckCircle size={15} />}
+                {guardandoEditar ? 'Guardando...' : 'Sí, guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast editar ── */}
+      <div style={{
+        position: 'fixed', bottom: 32, left: '50%',
+        transform: `translateX(-50%) translateY(${toastEditar.visible ? '0' : '20px'})`,
+        background: toastEditar.tipo === 'error' ? '#b91c1c' : '#111827',
+        color: 'white', padding: '13px 22px', borderRadius: 8,
+        display: 'flex', alignItems: 'center', gap: 10,
+        boxShadow: '0 8px 28px rgba(0,0,0,0.30)', fontSize: 14, fontWeight: 500,
+        opacity: toastEditar.visible ? 1 : 0,
+        transition: 'opacity 0.28s ease, transform 0.28s ease',
+        pointerEvents: 'none', zIndex: 1200, maxWidth: 420,
+      }}>
+        <CheckCircle size={17} style={{ color: toastEditar.tipo === 'error' ? '#fca5a5' : '#4ade80', flexShrink: 0 }} />
+        {toastEditar.msg}
       </div>
 
       {/* Modal cambio estado */}

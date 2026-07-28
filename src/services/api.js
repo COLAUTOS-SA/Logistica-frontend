@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://logistica.colautos.co/api';
 
 // ── Helper fetch ─────────────────────────────────────────────────────────────
 
@@ -131,6 +131,26 @@ export async function crearReclamacion(formData) {
   return mapReclamacion(await res.json());
 }
 
+export async function editarReclamacion(id, formData) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE_URL}/reclamaciones/${id}`, {
+    method: 'PUT',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const mensajes = {
+      404: 'Reclamación no encontrada.',
+      401: 'No autorizado. Inicie sesión nuevamente.',
+      403: 'No tiene permisos para realizar esta acción.',
+      500: 'Error interno del servidor. Intente de nuevo.',
+    };
+    throw new Error(mensajes[res.status] || err.detail || `Error al guardar (código ${res.status})`);
+  }
+  return mapReclamacion(await res.json());
+}
+
 export async function cambiarEstado(recId, nuevoEstado, usuario, detalle = null) {
   return request(`/reclamaciones/${recId}/estado`, {
     method: 'PATCH',
@@ -189,6 +209,54 @@ export async function getDocumentos(filtros = {}) {
   const qs = params.toString();
   const data = await request(`/documentos/${qs ? '?' + qs : ''}`);
   return data.map(mapDocumento);
+}
+
+export async function editarDocumento(id, formData) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE_URL}/documentos/${id}`, {
+    method: 'PUT',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const mensajes = {
+      405: 'Operación no disponible aún en el servidor. Contacte a soporte técnico.',
+      401: 'No autorizado. Inicie sesión nuevamente.',
+      403: 'No tiene permisos para realizar esta acción.',
+      404: 'Documento no encontrado.',
+      500: 'Error interno del servidor. Intente de nuevo.',
+    };
+    // Los mensajes en español tienen prioridad sobre el detail en inglés del servidor
+    throw new Error(mensajes[res.status] || err.detail || `Error al guardar (código ${res.status})`);
+  }
+  return mapDocumento(await res.json());
+}
+
+export async function eliminarDocumento(id) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE_URL}/documentos/${id}`, {
+    method: 'DELETE',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok && res.status !== 204) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Error al eliminar (código ${res.status})`);
+  }
+}
+
+export async function crearDocumento(formData) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${BASE_URL}/documentos/`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Error ${res.status}`);
+  }
+  return mapDocumento(await res.json());
 }
 
 // ── Usuarios ──────────────────────────────────────────────────────────────────

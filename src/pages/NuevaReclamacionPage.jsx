@@ -5,7 +5,7 @@ import { crearReclamacion } from '../services/api';
 import { TIPOS_NOVEDAD, TRANSPORTADORAS } from '../data/mockData';
 import {
   ArrowLeft, Camera, Video, FileText,
-  AlertTriangle, CheckCircle
+  AlertTriangle, CheckCircle, Loader2
 } from 'lucide-react';
 
 export default function NuevaReclamacionPage() {
@@ -13,6 +13,7 @@ export default function NuevaReclamacionPage() {
   const { usuario } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [nuevaId, setNuevaId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     vin: '',
     vehiculo: '',
@@ -80,14 +81,16 @@ export default function NuevaReclamacionPage() {
     videos.forEach(f => formData.append('videos', f));
     soportes.forEach(f => formData.append('soportes', f));
 
+    setLoading(true);
     try {
       const nueva = await crearReclamacion(formData);
       setSubmitted(true);
-      // Guardamos el id para navegar al detalle tras el éxito
       setNuevaId(nueva.id);
     } catch (error) {
       console.error('Error al crear reclamación:', error);
       alert('Error: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -271,9 +274,15 @@ export default function NuevaReclamacionPage() {
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px' }}>
-                <AlertTriangle size={16} /> Radicar Reclamación Real
+              <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '14px', gap: 8, display: 'flex', alignItems: 'center', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <AlertTriangle size={16} />}
+                {loading ? 'Guardando, por favor espere...' : 'Radicar Reclamación Real'}
               </button>
+              {loading && (
+                <p style={{ textAlign: 'center', fontSize: '13px', color: 'var(--gray-500)', marginTop: '10px' }}>
+                  Subiendo archivos y registrando la reclamación, esto puede tardar unos segundos...
+                </p>
+              )}
             </div>
           </div>
         </form>
