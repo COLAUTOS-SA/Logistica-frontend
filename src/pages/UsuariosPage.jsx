@@ -4,12 +4,9 @@ import { ROLES } from '../data/mockData';
 import { Plus, Shield, Mail, MapPin, Edit, Trash2, X, Eye, EyeOff } from 'lucide-react';
 
 const SEDES = [
-  'Pereira - Av 30 de Agosto',
-  'Dosquebradas',
-  'Medellín',
-  'Bogotá',
-  'Cali',
-  'Barranquilla',
+  'Pereira',
+  'Armenia',
+  'Manizales',
 ];
 
 const FORM_VACIO = { nombre: '', email: '', password: '', rol: '', sede: '' };

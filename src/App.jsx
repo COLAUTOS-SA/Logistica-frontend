@@ -9,6 +9,7 @@ import ReclamacionDetallePage from './pages/ReclamacionDetallePage';
 import NuevaReclamacionPage from './pages/NuevaReclamacionPage';
 import DocumentosPage from './pages/DocumentosPage';
 import UsuariosPage from './pages/UsuariosPage';
+import AccesoDirectoPage from './pages/AccesoDirectoPage';
 import './index.css';
 
 class ErrorBoundary extends Component {
@@ -47,6 +48,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={usuario ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      {/* Magic link — no requiere sesión previa */}
+      <Route path="/acceso/:token" element={<AccesoDirectoPage />} />
       <Route
         element={
           <ProtectedRoute>

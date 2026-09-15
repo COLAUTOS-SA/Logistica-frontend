@@ -58,10 +58,12 @@ export default function Layout() {
               <span className="sidebar-badge">{reclamacionesAbiertas}</span>
             )}
           </NavLink>
-          <NavLink to="/documentos" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <FileText size={18} />
-            Documentos
-          </NavLink>
+          {usuario?.rol !== 'colision' && (
+            <NavLink to="/documentos" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+              <FileText size={18} />
+              Documentos
+            </NavLink>
+          )}
 
           {tienePermiso('gestionar_usuarios') && (
             <>

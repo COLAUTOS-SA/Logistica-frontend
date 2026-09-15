@@ -35,8 +35,14 @@ export function AuthProvider({ children }) {
     return usuario.permisos.includes(permiso);
   };
 
+  /** Loguea directamente desde un magic link, sin contraseña. */
+  const loginDirecto = (usuarioData) => {
+    const rolInfo = ROLES[usuarioData.rol] ?? { label: usuarioData.rol, permisos: ['consultar'] };
+    setUsuario({ ...usuarioData, permisos: rolInfo.permisos, rolLabel: rolInfo.label });
+  };
+
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, tienePermiso, loginError, loginLoading }}>
+    <AuthContext.Provider value={{ usuario, login, loginDirecto, logout, tienePermiso, loginError, loginLoading }}>
       {children}
     </AuthContext.Provider>
   );

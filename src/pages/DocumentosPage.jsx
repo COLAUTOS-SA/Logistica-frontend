@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getDocumentos, crearDocumento, editarDocumento, eliminarDocumento } from '../services/api';
+import { TRANSPORTADORAS } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, FileText, Truck, Package, ArrowLeftRight,
@@ -16,8 +17,7 @@ const TABS = [
 
 const TIPOS_DOCUMENTO = [
   { value: 'manifiesto',          label: 'Manifiesto' },
-  { value: 'remesa',              label: 'Remesa' },
-  { value: 'inventario',          label: 'Inventario' },
+  { value: 'remesa_inventario',   label: 'Remesa + Inventario' },
   { value: 'inventario_traslado', label: 'Inventario de Traslado' },
 ];
 
@@ -42,17 +42,20 @@ const TIPO_LABELS_FULL = {
   inventario_traslado: 'INVENTARIO DE TRASLADO',
 };
 
-const TRANSPORTADORAS = ['BERGE Vigía', 'Colautos', 'Otra'];
 
 const camposPorTipo = {
-  manifiesto:          ['numero', 'fecha', 'transportadora', 'origen', 'destino', 'conductor', 'placa', 'vehiculos_json'],
-  remesa:              ['numero', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'peso', 'remitente', 'destinatario'],
-  inventario:          ['numero', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'remesa_no'],
-  inventario_traslado: ['numero', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'remesa_no'],
+  manifiesto:          ['numero', 'fecha', 'placa', 'vehiculos_json', 'observacion'],
+  remesa:              ['numero', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'peso', 'remitente', 'destinatario', 'observacion'],
+  inventario:          ['numero', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'remesa_no', 'observacion'],
+  inventario_traslado: ['numero', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'remesa_no', 'observacion'],
+  // Campos para creación combinada (genera 1 remesa + 1 inventario)
+  remesa_inventario:   ['numero_remesa', 'numero_inventario', 'fecha', 'vin', 'vehiculo', 'manifiesto_no', 'peso', 'remitente', 'destinatario', 'observacion'],
 };
 
 const FIELD_LABELS = {
-  numero:         'Número de documento *',
+  numero:            'Número de documento *',
+  numero_remesa:     'Número de Remesa *',
+  numero_inventario: 'Número de Inventario *',
   fecha:          'Fecha',
   transportadora: 'Transportadora',
   origen:         'Origen',
@@ -67,6 +70,7 @@ const FIELD_LABELS = {
   peso:           'Peso',
   remitente:      'Remitente',
   destinatario:   'Destinatario',
+  observacion:    'Observación',
 };
 
 const FIELD_LABELS_PRINT = {
@@ -96,7 +100,9 @@ const formatFecha = (fecha) => {
 };
 
 const FIELD_PLACEHOLDERS = {
-  numero:        'Ej: MAN-2026-001',
+  numero:            'Ej: MAN-2026-001',
+  numero_remesa:     'Ej: VIG-2100766',
+  numero_inventario: 'Ej: INV-2026-001',
   origen:        'Ej: Bogotá',
   destino:       'Ej: Medellín',
   conductor:     'Ej: Carlos Pérez',
@@ -474,6 +480,7 @@ function EditarDocumentoModal({ doc, onClose, onEditado, onEliminado, onError })
     peso:          doc.peso          || '',
     remitente:     doc.remitente     || '',
     destinatario:  doc.destinatario  || '',
+    observacion:   doc.observacion   || '',
   });
   const [archivo, setArchivo]             = useState(null);
   const [loading, setLoading]             = useState(false);
@@ -609,6 +616,12 @@ function EditarDocumentoModal({ doc, onClose, onEditado, onEliminado, onError })
                   <textarea className="form-control" rows={4} value={form[campo] || ''} onChange={e => handleChange(campo, e.target.value)} style={{ fontFamily: 'monospace', fontSize: 13 }} />
                 </div>
               );
+              if (campo === 'observacion') return (
+                <div key={campo} className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>{FIELD_LABELS[campo]}</label>
+                  <textarea className="form-control" rows={3} placeholder="Escribe aquí cualquier observación adicional..." value={form[campo] || ''} onChange={e => handleChange(campo, e.target.value)} style={{ fontSize: 13, resize: 'vertical' }} />
+                </div>
+              );
               if (campo === 'vin') return (
                 <div key={campo} className="form-group">
                   <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>{FIELD_LABELS[campo]}</label>
@@ -679,25 +692,62 @@ function NuevoDocumentoModal({ onClose, onCreado }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.numero?.trim()) { setError('El número de documento es obligatorio.'); return; }
+
+    // Validación según tipo
+    if (tipo === 'remesa_inventario') {
+      if (!form.numero_remesa?.trim() || !form.numero_inventario?.trim()) {
+        setError('El número de remesa y el número de inventario son obligatorios.');
+        return;
+      }
+    } else {
+      if (!form.numero?.trim()) { setError('El número de documento es obligatorio.'); return; }
+    }
+
     setError('');
     setLoading(true);
     try {
-      const fd = new FormData();
-      fd.append('tipo', tipo);
-      fd.append('subido_por', usuario?.nombre ?? 'Sistema');
-      campos.forEach(campo => {
-        if (campo === 'vehiculos_json') {
-          const vins = (form.vehiculos_json || '').split('\n').map(v => v.trim()).filter(Boolean);
-          fd.append('vehiculos_json', JSON.stringify(vins));
-        } else if (form[campo]?.trim()) {
-          fd.append(campo, form[campo].trim());
-        }
-      });
-      if (archivo) fd.append('archivo', archivo);
-      const nuevo = await crearDocumento(fd);
+      if (tipo === 'remesa_inventario') {
+        // Crear REMESA
+        const fdRemesa = new FormData();
+        fdRemesa.append('tipo', 'remesa');
+        fdRemesa.append('subido_por', usuario?.nombre ?? 'Sistema');
+        fdRemesa.append('numero', form.numero_remesa.trim());
+        ['fecha', 'vin', 'vehiculo', 'manifiesto_no', 'peso', 'remitente', 'destinatario'].forEach(c => {
+          if (form[c]?.trim()) fdRemesa.append(c, form[c].trim());
+        });
+        if (archivo) fdRemesa.append('archivo', archivo);
+        const remesa = await crearDocumento(fdRemesa);
+        onCreado(remesa);
+
+        // Crear INVENTARIO
+        const fdInv = new FormData();
+        fdInv.append('tipo', 'inventario');
+        fdInv.append('subido_por', usuario?.nombre ?? 'Sistema');
+        fdInv.append('numero', form.numero_inventario.trim());
+        ['fecha', 'vin', 'vehiculo', 'manifiesto_no'].forEach(c => {
+          if (form[c]?.trim()) fdInv.append(c, form[c].trim());
+        });
+        // El no. de remesa del inventario es el número de la remesa recién creada
+        if (form.numero_remesa?.trim()) fdInv.append('remesa_no', form.numero_remesa.trim());
+        const inventario = await crearDocumento(fdInv);
+        onCreado(inventario);
+      } else {
+        const fd = new FormData();
+        fd.append('tipo', tipo);
+        fd.append('subido_por', usuario?.nombre ?? 'Sistema');
+        campos.forEach(campo => {
+          if (campo === 'vehiculos_json') {
+            const vins = (form.vehiculos_json || '').split('\n').map(v => v.trim()).filter(Boolean);
+            fd.append('vehiculos_json', JSON.stringify(vins));
+          } else if (form[campo]?.trim()) {
+            fd.append(campo, form[campo].trim());
+          }
+        });
+        if (archivo) fd.append('archivo', archivo);
+        const nuevo = await crearDocumento(fd);
+        onCreado(nuevo);
+      }
       setExito(true);
-      onCreado(nuevo);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -713,8 +763,14 @@ function NuevoDocumentoModal({ onClose, onCreado }) {
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--success-50)', color: 'var(--success-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <CheckCircle size={28} />
             </div>
-            <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Documento creado exitosamente</h3>
-            <p style={{ color: 'var(--gray-500)', fontSize: 14, marginBottom: 24 }}>El documento fue registrado y aparece en el listado.</p>
+            <h3 style={{ fontWeight: 700, marginBottom: 8 }}>
+              {tipo === 'remesa_inventario' ? 'Remesa e Inventario creados' : 'Documento creado exitosamente'}
+            </h3>
+            <p style={{ color: 'var(--gray-500)', fontSize: 14, marginBottom: 24 }}>
+              {tipo === 'remesa_inventario'
+                ? 'Se registraron la remesa y el inventario. Aparecen en la pestaña Remesas e Inventarios.'
+                : 'El documento fue registrado y aparece en el listado.'}
+            </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
               <button className="btn btn-primary" onClick={() => { setExito(false); setForm({}); setArchivo(null); setTipo('manifiesto'); }}>Crear otro</button>
               <button className="btn btn-secondary" onClick={onClose}>Cerrar</button>
@@ -778,6 +834,12 @@ function NuevoDocumentoModal({ onClose, onCreado }) {
                 <div key={campo} className="form-group">
                   <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>{FIELD_LABELS[campo]}</label>
                   <textarea className="form-control" rows={4} placeholder={'3MDDJ2HAAV...\n5YJSA1E20H...'} value={form[campo] || ''} onChange={e => handleChange(campo, e.target.value)} style={{ fontFamily: 'monospace', fontSize: 13 }} />
+                </div>
+              );
+              if (campo === 'observacion') return (
+                <div key={campo} className="form-group">
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>{FIELD_LABELS[campo]}</label>
+                  <textarea className="form-control" rows={3} placeholder="Escribe aquí cualquier observación adicional..." value={form[campo] || ''} onChange={e => handleChange(campo, e.target.value)} style={{ fontSize: 13, resize: 'vertical' }} />
                 </div>
               );
               if (campo === 'vin') return (

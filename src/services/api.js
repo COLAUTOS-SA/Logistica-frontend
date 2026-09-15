@@ -102,6 +102,11 @@ export async function login(email, password) {
   return { token: data.access_token, usuario: data.usuario };
 }
 
+export async function validarAccesoDirecto(token) {
+  /** Valida un magic link. Retorna { usuario, redirigir_a } o lanza error. */
+  return request(`/auth/acceso/${token}`);
+}
+
 // ── Reclamaciones ─────────────────────────────────────────────────────────────
 
 export async function getReclamaciones(filtros = {}) {
