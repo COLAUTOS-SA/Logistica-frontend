@@ -93,9 +93,11 @@ const FIELD_LABELS_PRINT = {
 const formatFecha = (fecha) => {
   if (!fecha) return '—';
   try {
-    const d = new Date(fecha);
-    if (isNaN(d.getTime())) return fecha;
-    return d.toLocaleDateString('es-CO');
+    // Parsear solo la parte de fecha (YYYY-MM-DD) para evitar desfase por zona horaria UTC vs Colombia
+    const parte = String(fecha).split('T')[0];
+    const [anio, mes, dia] = parte.split('-');
+    if (anio && mes && dia) return `${dia}/${mes}/${anio}`;
+    return fecha;
   } catch { return fecha; }
 };
 
